@@ -1,0 +1,290 @@
+ym=input('请输入原码：\n');
+
+disp('原码：')
+
+disp(ym)
+array=ym-'0';
+% 生成AMI码， 第一个1为高电平
+
+AMI = zeros(size(ym));
+
+number1 = 0;
+
+number0 = 0;
+
+for i=1:length(ym)
+
+    if ym(i)==1
+
+        number1 = number1+1;
+
+        if mod(number1,2)==0
+
+            AMI(i) = -1;
+
+        end
+
+        if mod(number1,2)==1
+
+            AMI(i) = +1;
+
+        end
+
+    end
+
+    if ym(i)==0
+
+        number0 = number0+1;
+
+        AMI(i) = 0;
+
+    end
+
+end
+
+disp('AMI码：');
+
+disp(AMI);
+
+% 生成2V码， 第一个1为高电平
+
+clear i;
+
+HDB = ym;
+
+% 给每个0000小节加V，不管正负
+
+i=0;
+
+while(i<=length(ym))
+
+    i = i+1;
+
+    if i>length(ym)
+
+        break;
+
+    end
+
+    if ym(i) == 0
+
+        HDB(i) = 0;
+
+        if ym(i+1) == 0
+
+            HDB(i+1) = 0;
+
+            if ym(i+2) == 0
+
+                HDB(i+2) = 0;
+
+                if ym(i+3) == 0
+
+                    HDB(i+3) = 2;
+
+                    i = i+3;
+
+                end
+
+            end
+
+        end
+
+    end
+
+end
+
+%通过规律得到3B码
+
+for i=1:length(ym)
+
+    if abs(HDB(i)) == 2
+
+        firstV = i;
+
+        for j=i+1:length(ym)
+
+            if HDB(j) == 2
+
+                secondV = j;
+
+                if mod((secondV-firstV),2)==0
+
+                HDB(j-3)=1;
+
+                end
+
+            end          
+
+        end   
+
+    end    
+
+end
+
+  
+
+%B和1的正负交替，先把3B当成1
+
+number3 = 0;
+
+for i=1:length(ym)
+
+    if HDB(i)==1
+
+        number3 = number3+1;
+
+        if mod(number3,2)==0
+
+            HDB(i) = -1;
+
+        end
+
+        if mod(number3,2)==1
+
+            HDB(i) = +1;
+
+        end
+
+    end
+
+end
+
+%通过1和3B（1）的正负交替得到V码
+
+for i=1:length(ym)
+
+    if HDB(i)==2
+
+       if HDB(i-3)~=0
+
+           HDB(i)=HDB(i-3)*HDB(i);
+
+       else
+
+           HDB(i)=HDB(i-4)*HDB(i);
+
+       end
+
+    end
+
+end
+
+%通过V码得到B码
+
+for i=1:length(ym)
+
+    if abs(HDB(i)) == 2
+
+        firstV = i;
+
+        for j=i+1:length(ym)
+
+            if abs(HDB(j)) == 2
+
+                secondV = j;
+
+                if mod((secondV-firstV),2)==0
+
+                   HDB(j-3)=HDB(j)*3/2;
+
+                end
+
+            end          
+
+        end
+
+    end 
+
+end
+
+disp('HDB3码：')    
+
+disp(HDB)
+
+figure(1);
+
+subplot(5,1,1);
+
+stairs(0:length(ym)-1,ym);
+
+axis([0 length(ym) -2 2]);
+
+title('原码图'); grid on;
+
+subplot(5,1,2);
+
+stairs(0:length(AMI)-1,AMI);
+
+axis([0 length(AMI) -2 2]);
+
+title('AMI'); grid on;
+
+subplot(5,1,3);
+
+stairs(0:length(HDB)-1,HDB);
+
+axis([0 length(HDB) -4 4]);
+
+title('HDB3编码图'); grid on;
+
+%解码过程
+
+for i=1:length(HDB)
+
+    if abs(HDB(i))==2||abs(HDB(i))==3
+
+        HDB(i)=0;
+
+    end
+
+    if abs(HDB(i))==1
+
+        HDB(i)=1;
+
+    end
+
+   
+
+end
+
+disp('HDB3码的解码：')     
+
+disp(HDB)
+
+subplot(5,1,4);
+
+stairs(0:length(HDB)-1,HDB);
+
+axis([0 length(HDB) -2 2]);
+
+title('HDB3解码图'); grid on;
+
+MCoutput=zeros(1,2.*length(ym));
+disp('hhh')
+disp(MCoutput)
+for i=2:2:2*length(ym)
+	if ym(i./2)==1
+		MCoutput(i-1)=1;
+		MCoutput(i)=0;
+	else if ym(i./2)==0
+		MCoutput(i-1)=0;
+		MCoutput(i)=1;
+		end
+	end
+end
+MCoutput
+disp('Manchester码')
+disp(MCoutput)	
+subplot(5,1,5);
+x=0.5:0.5:length(ym);
+x1=[x;x(2:end),x(end)+0.5];
+x2=x1(:);
+y1=[MCoutput;MCoutput];
+y2=y1(:);
+plot(x2,y2);
+ylim([0,2]);
+title('曼彻斯特编码输出图像')
+
+
+
